@@ -56,7 +56,7 @@ void main()
 
   // playing the track
   // -> open the file
-  FL_FILE *f = fl_fopen("/music.raw","rb");
+  FL_FILE *f = fl_fopen("/welcome_song.raw","rb");
   if (f == NULL) {
     // error, no file
     printf("file not found.\n");

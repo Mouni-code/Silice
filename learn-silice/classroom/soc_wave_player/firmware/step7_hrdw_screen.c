@@ -9,7 +9,7 @@
 #include "printf.h"
 
 #ifndef HWFBUFFER
-#error This firmware needs HWFBUFFER defined
+// #error This firmware needs HWFBUFFER defined
 #endif
 
 void main()

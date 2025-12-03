@@ -20,6 +20,19 @@
 
 void main()
 {
+  int inc_per_cycle = (1 << 24)/56818 ;    // corresponds to ~440Hz at 50MHz
+  //*SNDGEN = (inc_per_cycle << 8) | 255;
+  int i = 0;
+  // for(i = 0; i < 256; i++) {
+  //   *SNDGEN = (inc_per_cycle << 8) | i;
+  //   pause(1000000);
+
+  // }
+  // for( i = 256; i > 0;i--) {
+  //   *SNDGEN = (inc_per_cycle << 8) | i;
+  //   pause(1000000);
+
+  // }
   // turn LEDs off
   *LEDS = 0;
   // install putchar handler for printf
@@ -53,18 +66,29 @@ void main()
 
     // read buttons and update selection
     if (*BUTTONS & (1<<3)) {
+      *SNDGEN = (inc_per_cycle << 8) | 100;
       ++ selected;
+      
     }
+    
     if (*BUTTONS & (1<<4)) {
+      *SNDGEN = (inc_per_cycle << 8) | 100; 
       -- selected;
     }
     // wrap around
     if (selected < 0) {
+      *SNDGEN = (inc_per_cycle << 8) | 100;
       selected = N_ITEMS - 1;
     }
+    
     if (selected >= N_ITEMS) {
+      *SNDGEN = (inc_per_cycle << 8) | 100;
+
       selected = 0;
-    }
+
+    }     
+     pause(200000);
+*SNDGEN = (inc_per_cycle << 8) | 0;
 
   }
 
