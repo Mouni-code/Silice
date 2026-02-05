@@ -2,8 +2,7 @@
 // MIT license, see LICENSE_MIT in Silice repo root
 // https://github.com/sylefeb/Silice/
 
-//Displaying folders too
-// il manque le retour au dossier parent .. le régler moi-même
+//Displaying menu and navigating into folders
 #include "config.h"
 #include "std.h"
 #include "oled.h"
@@ -37,10 +36,9 @@ char current_path[MAX_PATH_LEN] = "/mp3/";
 
 // Function to scan and store all files
 void scan_files() {
-  // Réinitialiser complètement
   n_items = 0;
   
-  // Optionnel : nettoyer le tableau (pour être sûr)
+  // Nettoie le tableau
   for (int i = 0; i < MAX_FILES; i++) {
     files[i].filename[0] = '\0';
     files[i].size = 0;
@@ -51,20 +49,49 @@ void scan_files() {
   
   if (fl_opendir(current_path, &dirstat)) {
     struct fs_dir_ent dirent;
-    while (fl_readdir(&dirstat, &dirent) == 0 && n_items < MAX_FILES) {
-      // Copy filename
+    
+    while (n_items < MAX_FILES) {
+      // Lit un fichier
+      int read_result = fl_readdir(&dirstat, &dirent);
+      
+      // Si échec ou fin de liste, on arrête
+      if (read_result != 0) {
+        break;
+      }
+      
+      // IMPORTANT : vérifie que le nom n'est pas vide
+      if (dirent.filename[0] == '\0') {
+        break;  // Plus de fichiers
+      }
+      
+      // ✅ FIX : Ignore les entrées "." et ".."
+      if (dirent.filename[0] == '.') {
+        if (dirent.filename[1] == '\0' || 
+            (dirent.filename[1] == '.' && dirent.filename[2] == '\0')) {
+          continue;  // Skip "." et ".."
+        }
+      }
+      
+      // Copie le nom
       int i = 0;
       while (dirent.filename[i] && i < MAX_FILENAME_LEN - 1) {
         files[n_items].filename[i] = dirent.filename[i];
         i++;
       }
       files[n_items].filename[i] = '\0';
+      
+      // Copie les infos
       files[n_items].size = dirent.size;
       files[n_items].is_dir = dirent.is_dir;
+      
       n_items++;
     }
+    
     fl_closedir(&dirstat);
   }
+  
+  // Debug : affiche le nombre réel de fichiers trouvés
+  *LEDS = n_items;
 }
 
 // Go back to parent directory
@@ -91,16 +118,12 @@ void go_back() {
     current_path[1] = '\0';
   }
 }
+
 // Navigate into a folder
 void navigate_to(char *foldername) {
   int len = strlen(foldername);
   
-  // Handle ".." - go back
-  if (len == 2 && strncmp(foldername, "..", 2) == 0) {
-    go_back();
-    return;
-  }
-  
+  // Ne gère plus ".." ici car on l'ignore maintenant dans scan_files
   // Handle "." - stay in current directory (do nothing)
   if (len == 1 && foldername[0] == '.') {
     return;
@@ -158,6 +181,9 @@ void main()
   
   // Main menu loop
   while(1) {
+    //  EFFACER LE FRAMEBUFFER AVANT DE REDESSINER
+    memset(display_framebuffer(), 0x00, 128*128);
+    
     // Clear screen and draw header
     display_set_cursor(0,0);
     
@@ -176,7 +202,10 @@ void main()
     if (n_items == 0) {
       printf("No files found!\n");
     } else {
-      for (int i = 0; i < n_items; ++i) {
+      // Limiter l'affichage aux 8 premiers fichiers
+      int max_display = (n_items > 8) ? 8 : n_items;
+      
+      for (int i = 0; i < max_display; ++i) {
         if (i == selected) {
           display_set_front_back_color(0, 255);
         } else {
@@ -187,8 +216,13 @@ void main()
           printf("%d> [DIR]  %s\n", i, files[i].filename);
         } else {
           printf("%d> [FILE] %s\n", i, files[i].filename);
-          printf("   [%d bytes]\n", files[i].size);
         }
+      }
+      
+      // Indiquer s'il y a plus de fichiers
+      if (n_items > max_display) {
+        display_set_front_back_color(200, 0);
+        printf("\n... %d more ...\n", n_items - max_display);
       }
     }
     
@@ -199,22 +233,35 @@ void main()
     int button_press = curr_buttons & ~prev_buttons;
     
     // Navigation
-    if (button_press & (1<<3)) { 
-      selected++;
-    }
     if (button_press & (1<<4)) { 
-      selected--;
+      selected++;
+      //allume led correspondante
+      *LEDS = 1 << (selected % 8);
     }
-    
-    // Selection/Enter
+    if (button_press & (1<<3)) { 
+      selected--;
+      *LEDS = 1 << (selected % 8);
+    }
+
+    // Bouton pour retour arrière (bouton 1)
+    if (button_press & (1<<1)) {
+      // Retour au dossier parent
+      if (strlen(current_path) > 5) {
+        go_back();
+        scan_files();
+        selected = 0;
+      }
+    }
+
+    // Selection/Enter (bouton 2)
     if (button_press & (1<<2)) {
       if (selected >= 0 && selected < n_items) {
         if (files[selected].is_dir) {
-          // Navigate into folder (handles ., .., and normal folders)
           navigate_to(files[selected].filename);
           scan_files();
           selected = 0;
         } else {
+          // TODO : lecture audio
           continue;
         }
       }
