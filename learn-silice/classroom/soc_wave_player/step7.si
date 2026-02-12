@@ -30,6 +30,28 @@ group mem_io
 }
 
 // --------------------------------------------------
+// Sound generator 
+// --------------------------------------------------
+//amplitude : volume control (0: mute, max: 255)
+unit sndgen(input uint24 inc_per_cycle, input uint8 amplitude, output uint8 audio) {
+  
+  uint25 cnt = 0;
+  always {
+    uint32 adjusted =  (cnt[0,24] * amplitude) >>  8;
+    audio = adjusted[16,8];
+    if (amplitude != 0) {
+      __display("P:%d A:%d", inc_per_cycle, amplitude);
+      // __display("cnt : %d", cnt);
+    } 
+    if(cnt>(1<<24)) {
+        cnt = 0;
+    }  else{
+      cnt = cnt + inc_per_cycle;
+    }
+  }
+}
+
+// --------------------------------------------------
 // Audio output unit
 // --------------------------------------------------
 
@@ -112,6 +134,8 @@ $$if not AUDIO then
   uint4 audio_r(0);
 $$end
 
+sndgen sg;
+
   // audio output
   audio audio;
   // audio streaming
@@ -147,7 +171,7 @@ $$end
     // ---- hardware audio streaming
     audio_l             = audio.audio_out; // feed output to on-board DAC
     audio_r             = audio.audio_out;
-    audio.audio_in      = audio_buffer.rdata0; // feed sample to audio out
+    audio.audio_in = audio_buffer.rdata0 + sg.audio; // feed sample to audio out
     audio_buffer_select = audio_buffer_sample[9,1]    // if == 512, done reading
         ? ~audio_buffer_select : audio_buffer_select; // swap buffers
     audio_buffer.addr0  = audio_buffer_start_raddr         // start addr
@@ -186,6 +210,7 @@ $$end
     uint1 display_reset_access   = prev_mem_addr[ 2,1];
     uint1 sd_access              = prev_mem_addr[ 5,1];
     uint1 button_access          = prev_mem_addr[ 6,1];
+    uint1 sndgen_access            = prev_mem_addr[ 7,1];
     uint1 rgbsel_access          = prev_mem_addr[$periph_bit-3$,1];
     uint1 framebuffer_access     = prev_mem_addr[$periph_bit-2$,1];
 	  // ---- memory access CPU <-> BRAM (reads and writes)
@@ -209,6 +234,8 @@ $$end
                                     ) {
       /// LEDs
       leds           = leds_access   ? prev_wdata[0,8] : leds;
+      sg.inc_per_cycle    = sndgen_access ? prev_wdata[8,24] : sg.inc_per_cycle;
+      sg.amplitude = sndgen_access ? prev_wdata[0,8]  : sg.amplitude;
       /// rgbsel
       rgbsel         = rgbsel_access ? prev_wdata[0,2] : rgbsel;
       if (rgbsel_access) {
