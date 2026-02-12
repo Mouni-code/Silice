@@ -5,26 +5,26 @@ Lecteur MP3 embarqué développé sur FPGA RISC-V avec écran OLED, navigation p
 ## ✨ Caractéristiques
 
 ### 🎼 Lecture Audio
-- ✅ Lecture de fichiers MP3 depuis carte SD
-- ✅ Contrôle du volume matériel (hardware SNDGEN)
-- ✅ Pause/Reprise de la lecture
-- ✅ Navigation dans les dossiers
-- ✅ Affichage des pochettes d'album (images .raw 128x128)
-- ✅ Indicateurs LED synchronisés avec la lecture
+-  Lecture de fichiers MP3 depuis carte SD
+-  Contrôle du volume matériel (hardware SNDGEN)
+-  Pause/Reprise de la lecture
+-  Navigation dans les dossiers
+-  Affichage des pochettes d'album (images .raw 128x128)
+-  Indicateurs LED synchronisés avec la lecture
 
 ### 🎹 Mode Piano Interactif
-- ✅ "Album Mystère" : mode piano caché
-- ✅ 7 notes jouables (DO, RÉ, FA, SOL, LA, SI)
-- ✅ Navigation avec les boutons haut/bas
-- ✅ Feedback sonore immédiat
+-  "Album Mystère" : mode piano caché
+-  7 notes jouables (DO, RÉ, FA, SOL, LA, SI)
+-  Navigation avec les boutons haut/bas
+-  Feedback sonore immédiat
 
 ### 🖥️ Interface Utilisateur
-- ✅ Menu de navigation intuitif
-- ✅ Affichage du chemin actuel
-- ✅ Support des sous-dossiers
-- ✅ Bips sonores de navigation
-- ✅ En-tête animé pulsant
-- ✅ Affichage limité à 8 fichiers par page
+-  Menu de navigation intuitif
+-  Affichage du chemin actuel
+-  Support des sous-dossiers
+-  Bips sonores de navigation
+-  En-tête animé pulsant
+-  Affichage limité à 8 fichiers par page
 
 
 ### Mapping des boutons
