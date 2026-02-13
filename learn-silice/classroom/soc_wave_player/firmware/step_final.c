@@ -366,6 +366,10 @@ void main()
   oled_init();
   oled_fullscreen();
   oled_clear(0);
+   //  EFFACER LE FRAMEBUFFER AVANT DE REDESSINER
+  memset(display_framebuffer(), 0x00, 128*128);
+  display_refresh();
+  
   
   // init sdcard
   sdcard_init();
